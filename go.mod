@@ -9,6 +9,7 @@ require (
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mozillazg/go-cos v0.11.0 // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/ugorji/go/codec v0.0.0-20190204201341-e444a5086c43 // indirect
 	gopkg.in/chanxuehong/wechat.v2 v2.0.0-20180924084534-7e0579cb5377
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect

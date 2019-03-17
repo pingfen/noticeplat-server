@@ -1,5 +1,6 @@
 package wechat
 
+/*
 import (
 	"errors"
 	"os"
@@ -25,3 +26,4 @@ func GetSession(code string) (*oauth2.Session, error) {
 	}
 	return oauth2.GetSession(e, code)
 }
+*/
