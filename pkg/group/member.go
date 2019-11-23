@@ -3,9 +3,11 @@ package group
 import (
 	"context"
 	"fmt"
+	"github.com/bingbaba/storage"
 	pkgstore "github.com/pingfen/noticeplat-server/pkg/storage"
 	"github.com/pingfen/noticeplat-server/pkg/user"
 	"github.com/pkg/errors"
+	"strings"
 	"sync"
 )
 
@@ -79,6 +81,26 @@ func ListMembers(ctx context.Context, gid string) ([]*Member, error) {
 	return ret, nil
 }
 
+func ListMemberIds(ctx context.Context, gid string) ([]string, error) {
+	store, err := pkgstore.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	key := fmt.Sprintf("/groups/%s/members", gid)
+	item_keys, err := store.List(ctx, key, &storage.SelectionPredicate{KeyOnly: true}, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "list members failed")
+	}
+
+	ret := make([]string, len(item_keys))
+	for i, k := range item_keys {
+		ret[i] = strings.TrimPrefix(k.(string), key+"/")
+	}
+
+	return ret, nil
+}
+
 func ListDetailMembers(ctx context.Context, gid string) ([]*Member, error) {
 	ms, err := ListMembers(ctx, gid)
 	if err != nil {
@@ -86,7 +108,6 @@ func ListDetailMembers(ctx context.Context, gid string) ([]*Member, error) {
 	}
 
 	var wg sync.WaitGroup
-
 	for _, m := range ms {
 		select {
 		case <-ctx.Done():
