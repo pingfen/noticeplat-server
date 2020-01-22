@@ -70,8 +70,8 @@ func TypeName(t TodoType) string {
 	}
 }
 
-func getTodoKey(id string) string {
-	return fmt.Sprintf("/todo/current/%s", id)
+func getTodoKey(owner, id string) string {
+	return fmt.Sprintf("/todo/current/%s/%s", owner, id)
 }
 
 func Create(ctx context.Context, t *Todo) error {
@@ -85,7 +85,7 @@ func Create(ctx context.Context, t *Todo) error {
 		return err
 	}
 
-	key := getTodoKey(t.ID)
+	key := getTodoKey(t.Owner, t.ID)
 
 	// check if exist
 	t_old := new(Todo)
@@ -104,11 +104,38 @@ func Create(ctx context.Context, t *Todo) error {
 		return errors.Wrap(err, "save failed")
 	}
 
+	// user -> todo
+	if t.Operator != "" {
+		if err = AddUserIndex(ctx, t.Owner, t.ID, t.Operator); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func Update(ctx context.Context, t *Todo) error {
 	return Create(ctx, t)
+}
+
+func List(ctx context.Context, owner string) ([]*Todo, error) {
+	store, err := pkgstore.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	key := getTodoKey(owner, "")
+	ret, err := store.List(ctx, key, nil, &Todo{})
+	if err != nil {
+		return nil, errors.Wrap(err, "list failed")
+	}
+
+	todo_list := make([]*Todo, len(ret))
+	for i, item := range ret {
+		todo_list[i] = item.(*Todo)
+	}
+
+	return todo_list, nil
 }
 
 func update(ctx context.Context, t *Todo) error {
@@ -117,7 +144,7 @@ func update(ctx context.Context, t *Todo) error {
 		return err
 	}
 
-	key := getTodoKey(t.ID)
+	key := getTodoKey(t.Owner, t.ID)
 	err = store.Update(ctx, key, 0, t, 0)
 	if err != nil {
 		return errors.Wrap(err, "update to storage failed")
@@ -125,7 +152,7 @@ func update(ctx context.Context, t *Todo) error {
 	return nil
 }
 
-func Get(ctx context.Context, target string) (*Todo, error) {
+func Get(ctx context.Context, owner, id string) (*Todo, error) {
 	// storage instance
 	store, err := pkgstore.Get()
 	if err != nil {
@@ -133,7 +160,7 @@ func Get(ctx context.Context, target string) (*Todo, error) {
 	}
 
 	t := new(Todo)
-	key := getTodoKey(target)
+	key := getTodoKey(owner, id)
 	err = store.Get(ctx, key, t)
 	if err != nil {
 		return nil, errors.Wrap(err, "get from storage failed")
@@ -142,12 +169,12 @@ func Get(ctx context.Context, target string) (*Todo, error) {
 	return t, nil
 }
 
-func ModifyOperator(ctx context.Context, target, operator string) error {
+func ModifyOperator(ctx context.Context, owner, id, operator string) error {
 	if operator == "" {
 		return errors.New("operator is empty")
 	}
 
-	t, err := Get(ctx, target)
+	t, err := Get(ctx, owner, id)
 	if err != nil {
 		return errors.Wrap(err, "read from storage failed")
 	}
@@ -156,7 +183,10 @@ func ModifyOperator(ctx context.Context, target, operator string) error {
 		return nil
 	}
 
+	newOperator := false
 	if !utils.InSlice(t.Operator, t.HistoryOperator) {
+		newOperator = true
+
 		t.HistoryOperator = append(t.HistoryOperator, t.Operator)
 
 		// the todo comment
@@ -164,7 +194,18 @@ func ModifyOperator(ctx context.Context, target, operator string) error {
 	}
 	t.Operator = operator
 
-	return update(ctx, t)
+	if err = update(ctx, t); err != nil {
+		return err
+	}
+
+	// new operator
+	if newOperator {
+		if err = AddUserIndex(ctx, t.Owner, t.ID, t.Operator); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func Finish(ctx context.Context, t *Todo) error {
@@ -186,7 +227,7 @@ func (t *Todo) valid() error {
 
 	now := time.Now()
 	if t.ID == "" {
-		t.ID = fmt.Sprintf("%s-%d", t.Owner, now.Nanosecond())
+		t.ID = fmt.Sprintf("%d", now.UnixNano()/1000)
 	}
 	if t.StartTime == 0 {
 		t.StartTime = now.Unix()

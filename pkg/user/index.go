@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/bingbaba/storage"
 	pkgstore "github.com/pingfen/noticeplat-server/pkg/storage"
-	"github.com/pkg/errors"
 )
 
 func GetUnionIdByOpenid(ctx context.Context, product, openid string) (string, error) {
@@ -18,7 +18,7 @@ func GetUnionIdByOpenid(ctx context.Context, product, openid string) (string, er
 	key := getOpenidKey(product, openid)
 	err = store.Get(ctx, key, &unionid)
 	if err != nil {
-		return "", errors.Wrap(err, "read key "+key+" failed")
+		return "", fmt.Errorf("read key %s failed %w", key, err)
 	}
 
 	return unionid, nil
@@ -85,25 +85,25 @@ func saveIndex(ctx context.Context, u_old, u *User) error {
 			info := u.WechatProducts[product]
 			err := store.Create(ctx, getOpenidKey(product, info.Openid), u.UnionId, 0)
 			if err != nil {
-				return errors.Wrap(err, "save new index failed")
+				return fmt.Errorf("save new index failed: %w", err)
 			}
 		case 2:
 			info := u.WechatProducts[product]
 			err := store.Create(ctx, getOpenidKey(product, info.Openid), u.UnionId, 0)
 			if err != nil {
-				return errors.Wrap(err, "save new index failed")
+				return fmt.Errorf("save new index failed: %w", err)
 			}
 
 			info_old := u_old.WechatProducts[product]
 			err = store.Delete(ctx, getOpenidKey(product, info_old.Openid), nil)
 			if err != nil && !storage.IsNotFound(err) {
-				return errors.Wrap(err, "delete old index failed")
+				return fmt.Errorf("delete old index failed: %w", err)
 			}
 		case 3:
 			info := u_old.WechatProducts[product]
 			err := store.Delete(ctx, getOpenidKey(product, info.Openid), nil)
 			if err != nil && !storage.IsNotFound(err) {
-				return errors.Wrap(err, "delete old index failed")
+				return fmt.Errorf("delete old index failed: %w", err)
 			}
 		default:
 
