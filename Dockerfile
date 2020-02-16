@@ -1,6 +1,11 @@
 FROM golang:1.13.5-alpine3.10 as build-env
 MAINTAINER Xue Bing <xuebing1110@gmail.com>
 
+# repo
+RUN cp /etc/apk/repositories /etc/apk/repositories.bak
+RUN echo "http://mirrors.aliyun.com/alpine/v3.10/main/" > /etc/apk/repositories
+RUN echo "http://mirrors.aliyun.com/alpine/v3.10/community/" >> /etc/apk/repositories
+
 # git
 RUN apk update
 RUN apk add --no-cache git
@@ -24,9 +29,19 @@ RUN swag init -g cmd/main.go
 RUN go build -o /app/applacation cmd/main.go
 
 ## docker image stage
-FROM registry.haier.net/library/alpine:3.10
+FROM alpine:3.10
+
+# repo
+RUN cp /etc/apk/repositories /etc/apk/repositories.bak
+RUN echo "http://mirrors.aliyun.com/alpine/v3.10/main/" > /etc/apk/repositories
+RUN echo "http://mirrors.aliyun.com/alpine/v3.10/community/" >> /etc/apk/repositories
 
 COPY --from=build-env /app /app
+
+
+RUN apk update
+RUN apk add --upgrade busybox
+
 
 ENV PORT=8080
 EXPOSE 8080
