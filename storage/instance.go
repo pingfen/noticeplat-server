@@ -1,9 +1,8 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/bingbaba/storage"
-	"github.com/pingfen/noticeplat-server/pkg/errs"
-	"github.com/pkg/errors"
 	"sync"
 )
 
@@ -25,7 +24,7 @@ func Init(s storage.Interface) {
 func Get() (storage.Interface, error) {
 
 	if store == nil {
-		return nil, errors.Wrap(errs.STORAGE_ERROR, "storage not ready")
+		return nil, fmt.Errorf("storage not ready")
 	}
 
 	return store, nil

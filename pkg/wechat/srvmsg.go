@@ -2,12 +2,12 @@ package wechat
 
 import (
 	"fmt"
-	"github.com/pingfen/noticeplat-server/pkg/todo"
+	"github.com/pingfen/notify/pkg/models"
 	"gopkg.in/chanxuehong/wechat.v2/mp/message/template"
 	"time"
 )
 
-func SendTemplateMsg(srvOpenId string, t *todo.Todo) error {
+func SendTemplateMsg(srvOpenId string, t *models.Todo) error {
 	msg := &template.TemplateMessage2{
 		ToUser:     srvOpenId, // "o3HH903-YBeNkhLmdomElPrmxLZI"
 		TemplateId: "1C8OQl70lFxEbcrGlyrHETli4nMrTLJWXSPKAJKNWgw",
@@ -26,7 +26,7 @@ func SendTemplateMsg(srvOpenId string, t *todo.Todo) error {
 			{Value: "点击编辑或查看详情!", Color: "#173177"},
 		}),
 	}
-	_, err := template.Send(client, msg)
+	_, err := template.Send(srvClient, msg)
 	return err
 }
 

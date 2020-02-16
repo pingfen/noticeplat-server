@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/bingbaba/storage"
-	pkgstore "github.com/pingfen/noticeplat-server/pkg/storage"
-	"github.com/pingfen/noticeplat-server/pkg/user"
-	"github.com/pkg/errors"
+	"github.com/pingfen/notify/pkg/e"
+	"github.com/pingfen/notify/pkg/models"
+	"github.com/pingfen/notify/service/user"
+	pkgstore "github.com/pingfen/notify/storage"
 	"strings"
 	"sync"
 )
@@ -16,11 +17,11 @@ var (
 )
 
 type Member struct {
-	UnionId   string `json:"unionid"`
+	OpenId    string `json:"openid"`
 	NickName  string `json:"nickname"`
 	ShowPhone bool   `json:"showPhone"`
 
-	Detail *user.User `json:"detail,omitempty"`
+	Detail *models.MpUser `json:"detail,omitempty"`
 }
 
 type DetailMember struct {
@@ -39,9 +40,9 @@ func AddMember(ctx context.Context, gid string, m *Member) error {
 		return err
 	}
 
-	err = store.Create(ctx, getGroupMemberKey(gid, m.UnionId), m, 0)
+	err = store.Create(ctx, getGroupMemberKey(gid, m.OpenId), m, 0)
 	if err != nil {
-		return errors.Wrap(err, "add member failed")
+		return fmt.Errorf("添加成员失败%w", err)
 	}
 
 	return nil
@@ -55,7 +56,7 @@ func RemoveMember(ctx context.Context, gid, mid string) error {
 
 	err = store.Delete(ctx, getGroupMemberKey(gid, mid), nil)
 	if err != nil {
-		return errors.Wrap(err, "remove member failed")
+		return fmt.Errorf("删除成员失败%w", err)
 	}
 
 	return nil
@@ -70,7 +71,7 @@ func ListMembers(ctx context.Context, gid string) ([]*Member, error) {
 	key := fmt.Sprintf("/groups/%s/members", gid)
 	ms, err := store.List(ctx, key, nil, new(Member))
 	if err != nil {
-		return nil, errors.Wrap(err, "list members failed")
+		return nil, fmt.Errorf("查询成员列表失败%w", err)
 	}
 
 	ret := make([]*Member, len(ms))
@@ -90,7 +91,7 @@ func ListMemberIds(ctx context.Context, gid string) ([]string, error) {
 	key := fmt.Sprintf("/groups/%s/members", gid)
 	item_keys, err := store.List(ctx, key, &storage.SelectionPredicate{KeyOnly: true}, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "list members failed")
+		return nil, fmt.Errorf("查询成员列表失败%w", err)
 	}
 
 	ret := make([]string, len(item_keys))
@@ -111,7 +112,7 @@ func ListDetailMembers(ctx context.Context, gid string) ([]*Member, error) {
 	for _, m := range ms {
 		select {
 		case <-ctx.Done():
-			return ms, errors.Wrap(context.Canceled, "read detail timeout")
+			return ms, fmt.Errorf("执行超时%w", e.COMMON_INTERNAL_CALLING_TIMEOUT)
 		case asyncLimit <- true:
 			wg.Add(1)
 		}
@@ -122,7 +123,7 @@ func ListDetailMembers(ctx context.Context, gid string) ([]*Member, error) {
 				<-asyncLimit
 			}()
 
-			u, err_tmp := user.Get(ctx, m.UnionId)
+			u, err_tmp := user.GetByOpenid(ctx, "notodo", m.OpenId)
 			if err_tmp != nil {
 				err = err_tmp
 				return

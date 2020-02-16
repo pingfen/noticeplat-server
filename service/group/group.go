@@ -4,32 +4,22 @@ import (
 	"context"
 	"fmt"
 	"github.com/bingbaba/storage"
-	"github.com/pingfen/noticeplat-server/pkg/errs"
-	pkgstore "github.com/pingfen/noticeplat-server/pkg/storage"
-	"github.com/pkg/errors"
+	"github.com/pingfen/notify/pkg/models"
+	pkgstore "github.com/pingfen/notify/storage"
 )
-
-type Group struct {
-	Id         string   `json:"id"`
-	OpenGid    string   `json:"openGid"`
-	Name       string   `json:"name"`
-	HeadimgUrl string   `json:"headimgurl"`
-	Managers   []string `json:"managers"`
-	Secret     string   `json:"secret,omitempty"`
-}
 
 func getGroupKey(gid string) string {
 	return fmt.Sprintf("/groups/%s/meta", gid)
 }
 
-func Create(ctx context.Context, g *Group, m *Member) error {
+func Create(ctx context.Context, g *models.Group, m *Member) error {
 	found, err := IsExist(ctx, g.Id)
 	if err != nil {
 		return err
 	}
 
 	if found {
-		return errors.Wrap(errs.OBJECT_EXIST, "group has exist")
+		return fmt.Errorf("该群组未发现%w", errs.OBJECT_EXIST)
 	}
 	g.Managers = []string{m.UnionId}
 
@@ -37,36 +27,36 @@ func Create(ctx context.Context, g *Group, m *Member) error {
 	store, _ := pkgstore.Get()
 	err = store.Create(ctx, getGroupKey(g.Id), g, 0)
 	if err != nil {
-		return errors.Wrap(err, "save failed")
+		return fmt.Errorf("创建群组失败%w", err)
 	}
 
 	// add manager to member
 	err = AddMember(ctx, g.Id, m)
 	if err != nil {
-		return errors.Wrap(err, "save manager to member failed")
+		return fmt.Errorf("保存成员信息失败%w", err)
 	}
 
 	return nil
 }
 
-func Update(ctx context.Context, g *Group) error {
+func Update(ctx context.Context, g *models.Group) error {
 	store, err := pkgstore.Get()
 	if err != nil {
 		return err
 	}
 
 	if g.Managers == nil || len(g.Managers) == 0 {
-		g_old := new(Group)
+		g_old := new(models.Group)
 		err = store.Get(ctx, getGroupKey(g.Id), g_old)
 		if err != nil {
-			return errors.Wrap(err, "group not found")
+			return fmt.Errorf("该群组未发现", errs.OBJECT_EXIST)
 		}
 		g.Managers = g_old.Managers
 	}
 
 	err = store.Update(ctx, getGroupKey(g.Id), 0, g, 0)
 	if err != nil {
-		return errors.Wrap(err, "update group failed")
+		return fmt.Errorf("更新群组失败%w", err)
 	}
 
 	return nil
@@ -78,25 +68,15 @@ func IsExist(ctx context.Context, id string) (bool, error) {
 		return true, err
 	}
 
-	g_old := new(Group)
+	g_old := new(models.Group)
 	err = store.Get(ctx, getGroupKey(id), g_old)
 	if err != nil {
 		if !storage.IsNotFound(err) {
-			return true, errors.Wrap(err, "check identify failed")
+			return true, fmt.Errorf("检查群组失败%w", err)
 		}
 	} else {
 		return true, nil
 	}
 
 	return false, nil
-}
-
-func (g *Group) IsManager(unionid string) bool {
-	for _, uid := range g.Managers {
-		if uid == unionid {
-			return true
-		}
-	}
-
-	return false
 }

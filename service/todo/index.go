@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	pkgstore "github.com/pingfen/noticeplat-server/pkg/storage"
+	pkgstore "github.com/pingfen/notify/storage"
 )
 
 func AddUserIndex(ctx context.Context, owner, id, user string) error {

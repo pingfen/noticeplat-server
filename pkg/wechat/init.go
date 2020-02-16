@@ -1,33 +1,53 @@
 package wechat
 
 import (
-	"net/http"
+	"gopkg.in/chanxuehong/wechat.v2/mp/oauth2"
 	"os"
 
 	"gopkg.in/chanxuehong/wechat.v2/mp/core"
 )
 
 var (
-	client *core.Client
-	APPID  string
+	// 服务号
+	SRV_APPID     string
+	SRV_APPSECRET string
+	srvClient     *core.Client
+
+	// 小程序
+	MINIPROGRAM_APPID        string
+	MINIPROGRAM_APPSECRET    string
+	miniprogramOAuthEndpoint *oauth2.Endpoint
 )
 
 func init() {
-	APPID = os.Getenv("WX_SRV_APPID")
-	if APPID == "" {
-		panic("WX_SRV_APPID was required")
+	//// 服务号
+	//SRV_APPID = os.Getenv("WX_SRV_APPID")
+	//if SRV_APPID == "" {
+	//	panic("WX_SRV_APPID was required")
+	//}
+	//
+	//SRV_APPSECRET = os.Getenv("WX_SRV_APPSECRET")
+	//if SRV_APPSECRET == "" {
+	//	panic("WX_SRV_APPSECRET was required")
+	//}
+	//
+	//http_client := http.DefaultClient
+	//ats := core.NewDefaultAccessTokenServer(
+	//	SRV_APPID,
+	//	SRV_APPSECRET,
+	//	http_client,
+	//)
+	//srvClient = core.NewClient(ats, http_client)
+
+	// 小程序
+	MINIPROGRAM_APPID = os.Getenv("WX_MINIPROGRAM_APPID")
+	if MINIPROGRAM_APPID == "" {
+		panic("WX_MINIPROGRAM_APPID was required")
 	}
 
-	app_secret := os.Getenv("WX_SRV_APPSECRET")
-	if app_secret == "" {
-		panic("WX_SRV_APPSECRET was required")
+	MINIPROGRAM_APPSECRET = os.Getenv("WX_MINIPROGRAM_APPSECRET")
+	if MINIPROGRAM_APPSECRET == "" {
+		panic("WX_MINIPROGRAM_APPSECRET was required")
 	}
-
-	http_client := http.DefaultClient
-	ats := core.NewDefaultAccessTokenServer(
-		APPID,
-		app_secret,
-		http_client,
-	)
-	client = core.NewClient(ats, http_client)
+	miniprogramOAuthEndpoint = oauth2.NewEndpoint(MINIPROGRAM_APPID, MINIPROGRAM_APPSECRET)
 }

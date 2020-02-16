@@ -1,27 +1,34 @@
-FROM golang:1.9.2-alpine3.6
+FROM golang:1.13.5-alpine3.10 as build-env
 MAINTAINER Xue Bing <xuebing1110@gmail.com>
 
-# repo
-RUN cp /etc/apk/repositories /etc/apk/repositories.bak
-RUN echo "http://mirrors.aliyun.com/alpine/v3.6/main/" > /etc/apk/repositories
-RUN echo "http://mirrors.aliyun.com/alpine/v3.6/community/" >> /etc/apk/repositories
-
-# timezone
+# git
 RUN apk update
-RUN apk add --no-cache tzdata \
-    && echo "Asia/Shanghai" > /etc/timezone \
-    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN apk add --no-cache git
 
 # move to GOPATH
-RUN mkdir -p /go/src/github.com/pingfen/noticeplat-server
-COPY . $GOPATH/src/github.com/pingfen/noticeplat-server
-WORKDIR $GOPATH/src/github.com/pingfen/noticeplat-server/
+RUN mkdir -p /app
+WORKDIR /app
+
+# go mod
+ENV GOPROXY=https://goproxy.cn,direct
+COPY go.mod .
+COPY go.sum .
+#RUN echo -e "nameserver 10.135.8.110\nnameserver 8.8.8.8" > /etc/resolv.conf & go mod download
+RUN go mod download
 
 # build
-RUN mkdir -p /app
-RUN go build -o /app/msgpack cmd/main.go
+COPY . .
+COPY etc /app/
+RUN go get -u github.com/swaggo/swag/cmd/swag
+RUN swag init -g cmd/main.go
+RUN go build -o /app/applacation cmd/main.go
 
-WORKDIR /app
+## docker image stage
+FROM registry.haier.net/library/alpine:3.10
+
+COPY --from=build-env /app /app
+
+ENV PORT=8080
 EXPOSE 8080
-ENV GIN_MODE=release
-CMD ["/app/msgpack"]
+WORKDIR /app
+CMD ["/app/applacation"]

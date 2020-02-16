@@ -1,7 +1,7 @@
 package wechat
 
 import (
-	"github.com/pingfen/noticeplat-server/pkg/todo"
+	"github.com/pingfen/notify/pkg/models"
 	"testing"
 	"time"
 )
@@ -9,7 +9,7 @@ import (
 func TestSendSrvMsg(t *testing.T) {
 	openid := "oqwWC1oB2ANQx9cV-vtV7ef_-yWc"
 
-	todo := &todo.Todo{
+	todo := &models.Todo{
 		Owner: openid,
 		Type:  todo.TODOTYPE_TASK,
 		Level: todo.TODOLEVEL_CRITICAL,
