@@ -23,7 +23,7 @@ RUN go mod download
 
 # build
 COPY . .
-COPY etc /app/
+#COPY etc /app/
 RUN go get -u github.com/swaggo/swag/cmd/swag
 RUN swag init -g cmd/main.go
 RUN go build -o /app/applacation cmd/main.go
