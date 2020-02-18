@@ -25,7 +25,8 @@ func (c *Captcha) Base64() *Captcha {
 }
 
 type ReserveRequest struct {
-	Contact   string     `json:"contact"`
-	MaskStore *MaskStore `json:"maskStore"`
-	Captcha   *Captcha   `json:"captcha"`
+	Contact     string        `json:"contact"`
+	MaskStore   *MaskStore    `json:"maskStore"`
+	Captcha     *Captcha      `json:"captcha"`
+	ContactInfo *MaskUserInfo `json:"contactInfo"`
 }

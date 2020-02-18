@@ -111,7 +111,7 @@ func ReserveMask(ctx *gin.Context) {
 		return
 	}
 
-	if req.Contact == "" {
+	if req.Contact == "" || req.ContactInfo == nil {
 		utils.SendErrResp(ctx, &e.Err{e.COMMON_BADREQUEST.Code, "缺少联系人信息"}, "")
 		return
 	}
