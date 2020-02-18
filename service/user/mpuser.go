@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+func SourceIsValid(source string) bool {
+	return wechat.SourceIsValid(source)
+}
+
 func LoginByCode(ctx context.Context, source, code string) (*models.MpUser, error) {
 	sess, err := wechat.GetMiniProgramSession(source, code)
 	if err != nil {

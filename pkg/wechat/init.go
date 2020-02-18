@@ -79,3 +79,12 @@ func GetOAuthEndpoint(source string) *oauth2.Endpoint {
 		return nil
 	}
 }
+
+func SourceIsValid(source string) bool {
+	switch source {
+	case "notodo", "qindaoren":
+		return true
+	default:
+		return false
+	}
+}

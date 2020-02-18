@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pingfen/notify/pkg/e"
 	"github.com/pingfen/notify/router/utils"
+	"github.com/pingfen/notify/service/user"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +56,7 @@ func getUidFromJwt(ctx *gin.Context) (uid string, err error) {
 		return "", fmt.Errorf("jwt invalid %w", err)
 	}
 
-	if claims.Issuer != "notodo" {
+	if !user.SourceIsValid(claims.Issuer) {
 		return "", fmt.Errorf("please login again")
 	}
 
