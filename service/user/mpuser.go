@@ -12,7 +12,7 @@ import (
 )
 
 func LoginByCode(ctx context.Context, source, code string) (*models.MpUser, error) {
-	sess, err := wechat.GetMiniProgramSession(code)
+	sess, err := wechat.GetMiniProgramSession(source, code)
 	if err != nil {
 		return nil, fmt.Errorf("登录失败%w", err)
 	}

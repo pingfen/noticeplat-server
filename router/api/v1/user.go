@@ -24,6 +24,11 @@ var (
 )
 
 func LoginByMiniprogram(ctx *gin.Context) {
+	source := ctx.Param("source")
+	if source == "" {
+		source = "notodo"
+	}
+
 	lr := new(LoginReq)
 
 	// request
@@ -38,7 +43,7 @@ func LoginByMiniprogram(ctx *gin.Context) {
 	}
 
 	// openid
-	userInfo, err := user.LoginByCode(ctx.Request.Context(), "notodo", lr.Code)
+	userInfo, err := user.LoginByCode(ctx.Request.Context(), source, lr.Code)
 	if err != nil {
 		utils.SendErrResp(ctx, &e.Err{e.COMMON_BADREQUEST.Code, err.Error()}, err.Error())
 		return
@@ -52,7 +57,7 @@ func LoginByMiniprogram(ctx *gin.Context) {
 	claims := &jwt.StandardClaims{
 		Audience:  "miniprogram",
 		ExpiresAt: now.Add(time.Hour * 24 * 30).Unix(),
-		Issuer:    "notodo",
+		Issuer:    source,
 		Subject:   user_id,
 		IssuedAt:  now.Unix(),
 	}

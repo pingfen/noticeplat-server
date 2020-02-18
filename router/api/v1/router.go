@@ -10,6 +10,7 @@ func init() {
 	{
 		// 登录
 		api.POST("/login-by-miniprogram", LoginByMiniprogram)
+		api.POST("/login-by-miniprogram/:source", LoginByMiniprogram)
 
 		authApi := api.Group("", AuthN)
 		{

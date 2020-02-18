@@ -37,7 +37,7 @@ func TestMask(t *testing.T) {
 }
 
 func TestReserve(t *testing.T) {
-	u := &models.MaskUserInfo{"1", "王重胜", "370201199410328213", "13355329830", nil} // 瞎编的数据
+	u := &models.MaskUserInfo{"1", "王重胜", "370201199410308213", "13355329830", nil} // 瞎编的数据
 	ms := &models.MaskStore{
 		Area:    "李沧区",
 		Address: "李沧区铜川路216号负一层超市",

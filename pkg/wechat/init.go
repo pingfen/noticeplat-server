@@ -17,6 +17,11 @@ var (
 	MINIPROGRAM_APPID        string
 	MINIPROGRAM_APPSECRET    string
 	miniprogramOAuthEndpoint *oauth2.Endpoint
+
+	// 小程序
+	MINIPROGRAM_QINDAOREN_APPID       string
+	MINIPROGRAM_QINDAOREN_APPSECRET   string
+	miniprogramOAuthEndpointQindaoren *oauth2.Endpoint
 )
 
 func init() {
@@ -50,4 +55,27 @@ func init() {
 		panic("WX_MINIPROGRAM_APPSECRET was required")
 	}
 	miniprogramOAuthEndpoint = oauth2.NewEndpoint(MINIPROGRAM_APPID, MINIPROGRAM_APPSECRET)
+
+	// 小程序
+	MINIPROGRAM_QINDAOREN_APPID = os.Getenv("WX_MINIPROGRAM_QINDAOREN_APPID")
+	if MINIPROGRAM_QINDAOREN_APPID == "" {
+		panic("WX_MINIPROGRAM_QINDAOREN_APPID was required")
+	}
+
+	MINIPROGRAM_QINDAOREN_APPSECRET = os.Getenv("WX_MINIPROGRAM_QINDAOREN_APPSECRET")
+	if MINIPROGRAM_QINDAOREN_APPSECRET == "" {
+		panic("WX_MINIPROGRAM_QINDAOREN_APPSECRET was required")
+	}
+	miniprogramOAuthEndpointQindaoren = oauth2.NewEndpoint(MINIPROGRAM_QINDAOREN_APPID, MINIPROGRAM_QINDAOREN_APPSECRET)
+}
+
+func GetOAuthEndpoint(source string) *oauth2.Endpoint {
+	switch source {
+	case "notodo":
+		return miniprogramOAuthEndpoint
+	case "qindaoren":
+		return miniprogramOAuthEndpointQindaoren
+	default:
+		return nil
+	}
 }
