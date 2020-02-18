@@ -111,14 +111,14 @@ func ReserveMask(ctx *gin.Context) {
 		return
 	}
 
-	if req.Contact == "" || req.ContactInfo == nil {
+	if req.Contact != "" || req.ContactInfo != nil {
+		err := mask.DealReserveRequest(ctx, uid, req)
+		if err != nil {
+			utils.SendErrResp(ctx, &e.Err{e.COMMON_BADREQUEST.Code, err.Error()}, err.Error())
+			return
+		}
+	} else {
 		utils.SendErrResp(ctx, &e.Err{e.COMMON_BADREQUEST.Code, "缺少联系人信息"}, "")
-		return
-	}
-
-	err := mask.DealReserveRequest(ctx, uid, req)
-	if err != nil {
-		utils.SendErrResp(ctx, &e.Err{e.COMMON_BADREQUEST.Code, err.Error()}, err.Error())
 		return
 	}
 
